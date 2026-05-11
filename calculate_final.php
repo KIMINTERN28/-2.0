@@ -363,7 +363,7 @@ function money($val, $isGgr = false) {
  * 截断到小数点后2位，不四舍五入
  */
 function truncate2(val) {
-    return Math.trunc(val * 100) / 100;
+    return Math.trunc(Math.round(val * 10000) / 100) / 100;
 }
 
 /**
