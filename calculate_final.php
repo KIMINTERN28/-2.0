@@ -163,7 +163,10 @@ for ($i = 0; $i < count($agentReports) - 1; $i++) {
             $parent['subTotalProfit'] += $gain;
         }
     }
-    $parent['finalSubEarn'] = $parent['subTotalProfit'] * (1 - $parent['costRate'] / 100);
+    // 下级差点为负数时，代理成本不扣，直接用原数
+    $parent['finalSubEarn'] = $parent['subTotalProfit'] < 0
+        ? $parent['subTotalProfit']
+        : $parent['subTotalProfit'] * (1 - $parent['costRate'] / 100);
 }
 
 function money($val, $isGgr = false) {
@@ -440,14 +443,16 @@ function applyFeeWaive() {
         const costDeductCell = card.querySelector('.cell-cost-deduct');
         const grandTotalCell = card.querySelector('.cell-grand-total');
 
-        // 读取下级差点的原始值（直接从DOM读取，不受toggle影响）
+        // 读取下级差点原始总计（从 data 属性存储，首次执行时保存）
         let subEarn = 0;
         if (subEarnCell) {
-            // 从原始 data 属性读（首次执行时存一下）
-            if (!card.dataset.origSubEarn) {
-                card.dataset.origSubEarn = subEarnCell.innerText.replace(/[^0-9.\-]/g, '') || '0';
+            if (!card.dataset.origSubTotal) {
+                const subTotalCell2 = card.querySelector('.cell-sub-total');
+                card.dataset.origSubTotal = subTotalCell2 ? subTotalCell2.innerText.replace(/[^0-9.\-]/g, '') : '0';
             }
-            subEarn = parseFloat(card.dataset.origSubEarn) || 0;
+            const subTotal = parseFloat(card.dataset.origSubTotal) || 0;
+            // 负数时不扣代理成本，直接用原数
+            subEarn = subTotal < 0 ? subTotal : truncate2(subTotal * (1 - costRate / 100));
         }
 
         if (grandTotalCell) {
